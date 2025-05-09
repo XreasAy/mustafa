@@ -1,0 +1,94 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const generateDays = () => {
+  const days = [];
+  for (let i = 0; i < 40; i++) {
+    days.push({ id: i, label: `${i + 1}. Gün`, tasks: [] });
+  }
+  return days;
+};
+
+export default function CalendarApp() {
+  const [days, setDays] = useState(generateDays());
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [newTask, setNewTask] = useState("");
+
+  const handleAddTask = () => {
+    if (!newTask.trim()) return;
+    setDays(prev =>
+      prev.map(day =>
+        day.id === selectedDay.id
+          ? { ...day, tasks: [...day.tasks, { text: newTask, done: false }] }
+          : day
+      )
+    );
+    setNewTask("");
+  };
+
+  const toggleTask = (taskIndex) => {
+    setDays(prev =>
+      prev.map(day => {
+        if (day.id !== selectedDay.id) return day;
+        const updatedTasks = [...day.tasks];
+        updatedTasks[taskIndex].done = !updatedTasks[taskIndex].done;
+        return { ...day, tasks: updatedTasks };
+      })
+    );
+  };
+
+  const deleteTask = (taskIndex) => {
+    setDays(prev =>
+      prev.map(day => {
+        if (day.id !== selectedDay.id) return day;
+        const updatedTasks = day.tasks.filter((_, idx) => idx !== taskIndex);
+        return { ...day, tasks: updatedTasks };
+      })
+    );
+  };
+
+  return (
+    <div className="p-4 max-w-5xl mx-auto grid gap-6">
+      <h1 className="text-3xl font-bold text-center text-blue-600">40 Günlük Takvim</h1>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        {days.map(day => (
+          <Card key={day.id} onClick={() => setSelectedDay(day)} className="cursor-pointer hover:shadow-lg transition-transform hover:scale-105">
+            <CardContent className="p-4 text-center font-medium text-gray-700">
+              {day.label}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {selectedDay && (
+        <div className="mt-8 bg-white shadow-md rounded-xl p-6">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800">{selectedDay.label} Görevleri</h2>
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <Input
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              placeholder="Yeni görev girin"
+              className="flex-1"
+            />
+            <Button onClick={handleAddTask} className="bg-blue-600 hover:bg-blue-700 text-white">Ekle</Button>
+          </div>
+          <ul className="space-y-3">
+            {selectedDay.tasks.map((task, idx) => (
+              <li key={idx} className="flex items-center gap-3">
+                <Checkbox
+                  checked={task.done}
+                  onCheckedChange={() => toggleTask(idx)}
+                />
+                <span className={`flex-1 ${task.done ? "line-through text-gray-400" : "text-gray-800"}`}>{task.text}</span>
+                <Button variant="destructive" size="sm" onClick={() => deleteTask(idx)}>Sil</Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
